@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>MHC Rosmalen – Portaal</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(()=>navigator.serviceWorker.ready).then(reg=>reg.update());}</script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --navy: #0E2A5A; --gold: #F5A800; --white: #fff; --gray-100: #F4F5F7; --gray-300: #D1D5DB; --gray-500: #6B7280; --danger: #DC2626; --success: #16A34A; --radius: 12px; }
+    body { font-family: 'Inter', sans-serif; background: var(--gray-100); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; }
+    .login-wrap { width: 100%; max-width: 400px; }
+    .logo-header { text-align: center; margin-bottom: 2rem; }
+    .logo-header img { width: 90px; height: 90px; object-fit: contain; margin-bottom: 1rem; }
+    .logo-header h1 { font-size: 1.4rem; font-weight: 600; color: var(--navy); }
+    .logo-header p { font-size: .875rem; color: var(--gray-500); margin-top: .25rem; }
+    .card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--gray-300); padding: 2rem; }
+    .card h2 { font-size: 1rem; font-weight: 600; color: var(--navy); margin-bottom: .5rem; text-align: center; }
+    .card p { font-size: .875rem; color: var(--gray-500); text-align: center; margin-bottom: 1.5rem; line-height: 1.5; }
+    .form-row { margin-bottom: 1rem; }
+    .form-row label { display: block; font-size: .8125rem; font-weight: 500; color: var(--gray-500); margin-bottom: .4rem; }
+    .form-row input { width: 100%; padding: 10px 12px; font-family: inherit; font-size: 16px; border: 1px solid var(--gray-300); border-radius: 8px; outline: none; color: var(--navy); background: var(--white); }
+    .form-row input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(245,168,0,.15); }
+    .submit-btn { width: 100%; padding: 11px 16px; font-family: inherit; font-size: .9375rem; font-weight: 600; background: var(--navy); color: var(--white); border: none; border-radius: 8px; cursor: pointer; transition: background .15s; }
+    .submit-btn:hover { background: #0a1f45; }
+    .submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .error-msg { font-size: .8125rem; color: var(--danger); text-align: center; margin-top: 1rem; display: none; }
+    .success-msg { font-size: .875rem; color: var(--success); text-align: center; margin-top: 1rem; display: none; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: .875rem 1rem; line-height: 1.5; }
+    .loading { font-size: .875rem; color: var(--gray-500); text-align: center; margin-top: 1rem; display: none; }
+    footer { margin-top: 2rem; font-size: .75rem; color: var(--gray-500); text-align: center; }
+    @media(max-width:400px) { .card { padding: 1.5rem 1rem; } .logo-header img { width: 70px; height: 70px; } }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="logo-header">
+      <img src="logo_mhcrosmalen.gif" alt="MHC Rosmalen">
+      <h1>MHC Rosmalen</h1>
+      <p>Technische commissie portaal</p>
+    </div>
+    <div class="card">
+      <h2>Inloggen</h2>
+      <p>Vul je e-mailadres in. Je ontvangt een inloglink in je mailbox.</p>
+      <div class="form-row">
+        <label for="email">E-mailadres</label>
+        <input type="email" id="email" placeholder="jouw@email.nl" autocomplete="email" onkeydown="if(event.key==='Enter') verstuurLink()">
+      </div>
+      <button class="submit-btn" id="submit-btn" onclick="verstuurLink()">Stuur inloglink</button>
+      <div class="error-msg" id="error-msg"></div>
+      <div class="loading" id="loading">Link wordt verstuurd...</div>
+      <div class="success-msg" id="success-msg">
+        ✉️ Inloglink verstuurd!<br>
+        Controleer je mailbox en klik op de link om in te loggen.<br>
+        <span style="font-size:.8125rem;color:var(--gray-500)">Geen mail ontvangen? Controleer je spammap.</span>
+      </div>
+    </div>
+  </div>
+  <footer>&copy; 2026 MHC Rosmalen – Technische commissie</footer>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://kgziynyxcktoiqedquwl.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtneml5bnl4Y2t0b2lxZWRxdXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MDI0NDgsImV4cCI6MjA5NzA3ODQ0OH0.nIbuFOjNsAcCRY0wvb5EoD4MfN8ga221YXuomrZOj9E';
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    // Als iemand terugkomt via de magic link → doorsturen naar dashboard
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      const { data: gebruiker } = await sb.from('gebruikers').select('rol').eq('email', session.user.email).single();
+      if (gebruiker) { window.location.href = 'dashboard.html'; }
+    }
+
+    // Auth state change opvangen (magic link callback)
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        const { data: gebruiker } = await sb.from('gebruikers').select('rol').eq('email', session.user.email).single();
+        if (gebruiker) {
+          window.location.href = 'dashboard.html';
+        } else {
+          await sb.auth.signOut();
+          document.getElementById('error-msg').textContent = 'Je e-mailadres heeft geen toegang tot dit portaal. Neem contact op met de TC.';
+          document.getElementById('error-msg').style.display = 'block';
+          document.getElementById('success-msg').style.display = 'none';
+        }
+      }
+    });
+
+    window.verstuurLink = async function() {
+      const email = document.getElementById('email').value.trim().toLowerCase();
+      const errEl = document.getElementById('error-msg');
+      const loadEl = document.getElementById('loading');
+      const succEl = document.getElementById('success-msg');
+      const btn = document.getElementById('submit-btn');
+
+      errEl.style.display = 'none';
+      succEl.style.display = 'none';
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errEl.textContent = 'Vul een geldig e-mailadres in.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      // Check of e-mail bekend is in de gebruikers tabel
+      const { data: gebruiker } = await sb.from('gebruikers').select('rol').eq('email', email).single();
+      if (!gebruiker) {
+        errEl.textContent = 'Dit e-mailadres heeft geen toegang tot het portaal. Neem contact op met de TC.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      loadEl.style.display = 'block';
+
+      try {
+        const { error } = await sb.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: window.location.origin + '/dashboard.html'
+          }
+        });
+        if (error) throw error;
+        loadEl.style.display = 'none';
+        succEl.style.display = 'block';
+        document.getElementById('email').disabled = true;
+      } catch(e) {
+        loadEl.style.display = 'none';
+        errEl.textContent = 'Er ging iets mis. Probeer het opnieuw.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        console.error(e);
+      }
+    };
+  </script>
+</body>
+</html>

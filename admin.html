@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TC Beheer – MHC Rosmalen</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --navy: #0E2A5A; --gold: #F5A800; --gold-dark: #C98A00; --white: #fff; --gray-100: #F4F5F7; --gray-200: #E5E7EB; --gray-300: #D1D5DB; --gray-500: #6B7280; --gray-700: #374151; --danger: #DC2626; --success: #16A34A; --radius: 12px; }
+    body { font-family: 'Inter', sans-serif; background: var(--gray-100); color: var(--navy); min-height: 100vh; }
+    header { background: var(--navy); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+    header img { width: 40px; height: 40px; object-fit: contain; }
+    header h1 { color: var(--white); font-size: 1rem; font-weight: 600; }
+    header span { color: var(--gold); display: block; font-size: 0.72rem; font-weight: 400; letter-spacing: 0.04em; text-transform: uppercase; }
+    .header-actions { margin-left: auto; display: flex; gap: 1rem; align-items: center; }
+    .header-user { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+    .logout-btn { font-size: 0.8rem; color: rgba(255,255,255,0.7); background: none; border: 1px solid rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 6px; cursor: pointer; }
+    .logout-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.5); }
+    main { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .section-title { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gray-500); margin: 2rem 0 .75rem; }
+    .card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--gray-300); padding: 1.25rem 1.5rem; margin-bottom: .75rem; }
+    .seizoen-widget { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .seizoen-actief { background: var(--white); border-radius: var(--radius); border: 1px solid var(--gray-300); padding: 1.25rem 1.5rem; }
+    .seizoen-actief h3 { font-size: 0.8125rem; font-weight: 500; color: var(--gray-500); margin-bottom: .25rem; }
+    .seizoen-naam { font-size: 1.4rem; font-weight: 600; margin-bottom: .75rem; }
+    .toggle-wrap { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+    .toggle-label { font-size: 0.875rem; }
+    .toggle { position: relative; width: 44px; height: 24px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background: var(--gray-300); border-radius: 24px; cursor: pointer; transition: background .2s; }
+    .slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: var(--white); border-radius: 50%; transition: transform .2s; }
+    .toggle input:checked + .slider { background: var(--success); }
+    .toggle input:checked + .slider::before { transform: translateX(20px); }
+    .nieuw-seizoen { background: var(--white); border-radius: var(--radius); border: 1px solid var(--gray-300); padding: 1.25rem 1.5rem; }
+    .nieuw-seizoen h3 { font-size: 0.8125rem; font-weight: 500; color: var(--gray-500); margin-bottom: .75rem; }
+    .nieuw-seizoen input { width: 100%; padding: 9px 12px; font-family: inherit; font-size: 0.9375rem; border: 1px solid var(--gray-300); border-radius: 8px; margin-bottom: .75rem; outline: none; color: var(--navy); }
+    .nieuw-seizoen input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(245,168,0,0.15); }
+    .btn { padding: 8px 16px; font-family: inherit; font-size: 0.875rem; font-weight: 500; border-radius: 8px; cursor: pointer; border: 1px solid transparent; transition: background .15s; }
+    .btn-primary { background: var(--navy); color: var(--white); }
+    .btn-primary:hover { background: #0a1f45; }
+    .btn-secondary { background: var(--white); color: var(--navy); border-color: var(--gray-300); }
+    .btn-secondary:hover { background: var(--gray-100); }
+    .btn-danger { background: var(--white); color: var(--danger); border-color: #FECACA; }
+    .btn-danger:hover { background: #FEF2F2; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .75rem; margin-bottom: 1rem; }
+    .stat-card { background: var(--gray-100); border-radius: 8px; padding: .875rem 1rem; }
+    .stat-label { font-size: 0.75rem; color: var(--gray-500); margin-bottom: .25rem; }
+    .stat-value { font-size: 1.5rem; font-weight: 600; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; min-width: 700px; }
+    th { text-align: left; padding: 8px 12px; background: var(--gray-100); font-weight: 500; color: var(--gray-700); border-bottom: 1px solid var(--gray-200); font-size: 0.75rem; text-transform: uppercase; letter-spacing: .04em; }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--gray-200); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr.clickable { cursor: pointer; }
+    tr.clickable:hover td { background: #FFF8E6 !important; }
+    .tag { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
+    .tag-ja { background: #DCFCE7; color: #166534; }
+    .tag-nee { background: var(--gray-100); color: var(--gray-500); }
+    select { padding: 8px 12px; font-family: inherit; font-size: 0.875rem; border: 1px solid var(--gray-300); border-radius: 8px; background: var(--white); color: var(--navy); outline: none; cursor: pointer; }
+    select:focus { border-color: var(--gold); }
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--gray-500); font-size: 0.9rem; }
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--navy); color: var(--white); padding: .75rem 1.25rem; border-radius: 8px; font-size: 0.875rem; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 99; }
+    .toast.show { opacity: 1; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: none; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--white); border-radius: var(--radius); width: 100%; max-width: 620px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; background: var(--white); z-index: 1; }
+    .modal-header h3 { font-size: 1rem; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--gray-500); padding: 4px 8px; border-radius: 4px; }
+    .modal-close:hover { background: var(--gray-100); }
+    .modal-body { padding: 1.25rem 1.5rem; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--gray-200); display: flex; gap: .75rem; justify-content: flex-end; }
+    .form-row { margin-bottom: 1rem; }
+    .form-row label { display: block; font-size: 0.8125rem; font-weight: 500; color: var(--gray-700); margin-bottom: .4rem; }
+    .form-row input[type=text], .form-row input[type=email], .form-row input[type=number] { width: 100%; padding: 8px 10px; font-family: inherit; font-size: 0.875rem; border: 1px solid var(--gray-300); border-radius: 6px; outline: none; color: var(--navy); }
+    .form-row input:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(245,168,0,0.15); }
+    .form-row select { width: 100%; padding: 8px 10px; font-family: inherit; font-size: 0.875rem; border: 1px solid var(--gray-300); border-radius: 6px; outline: none; color: var(--navy); background: var(--white); }
+    .check-grid { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .check-grid label { display: flex; align-items: center; gap: .4rem; font-size: 0.875rem; cursor: pointer; }
+    .radio-yn { display: flex; gap: 1.5rem; }
+    .radio-yn label { display: flex; align-items: center; gap: .4rem; font-size: 0.875rem; cursor: pointer; }
+    .ht-grid { display: grid; grid-template-columns: auto 1fr 1fr; gap: 6px 16px; align-items: center; font-size: 0.875rem; }
+    .ht-grid .ht-header { font-size: 0.75rem; font-weight: 500; color: var(--gray-500); text-align: center; }
+    .form-section { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-500); margin: 1.25rem 0 .75rem; padding-top: 1rem; border-top: 1px solid var(--gray-200); }
+    @media(max-width:600px) {
+      .seizoen-widget { grid-template-columns: 1fr; }
+      header { padding: .875rem 1rem; }
+      header img { width: 34px; height: 34px; }
+      .header-user { display: none; }
+      main { padding: 1rem .75rem 3rem; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .modal { max-height: 100vh; border-radius: 0; max-width: 100%; }
+      .modal-overlay { padding: 0; align-items: flex-end; }
+      table { font-size: .75rem; min-width: 600px; }
+      th, td { padding: 6px 8px; }
+    }
+  </style>
+  <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(()=>navigator.serviceWorker.ready).then(reg=>reg.update());}</script>
+</head>
+<body>
+  <header>
+    <img src="logo_mhcrosmalen.gif" alt="Logo MHC Rosmalen">
+    <div>
+      <h1>MHC Rosmalen</h1>
+      <span>TC Beheer</span>
+    </div>
+    <div class="header-actions">
+      <span class="header-user" id="header-user"></span>
+      <a href="dashboard.html" style="font-size:0.8rem;color:rgba(255,255,255,0.7);text-decoration:none;border:1px solid rgba(255,255,255,0.2);padding:5px 12px;border-radius:6px;">← Dashboard</a>
+      <button class="logout-btn" onclick="doLogout()">Uitloggen</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="section-title">Seizoen beheer</div>
+    <div class="seizoen-widget">
+      <div class="seizoen-actief">
+        <h3>Actief seizoen</h3>
+        <div class="seizoen-naam" id="actief-naam">Geen seizoen actief</div>
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="formulier-toggle" onchange="toggleFormulier(this.checked)">
+            <span class="slider"></span>
+          </label>
+          <span class="toggle-label" id="toggle-label">Formulier gesloten</span>
+        </div>
+        <div style="margin-bottom:.5rem;font-size:0.8125rem;font-weight:500;color:var(--gray-500)">Seizoen bekijken of activeren</div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <select id="seizoen-select" onchange="seizoenGekozen(this.value)" style="flex:1;min-width:140px">
+            <option value="">— selecteer seizoen —</option>
+          </select>
+          <button class="btn btn-secondary" onclick="loadInzendingen()">↻</button>
+        </div>
+        <div style="display:flex;gap:.5rem;margin-top:.5rem">
+          <button class="btn btn-primary" id="activeer-btn" onclick="activeerSeizoen()" style="flex:1;display:none">
+            ✓ Activeer &amp; open formulier
+          </button>
+        </div>
+        <div id="activeer-hint" style="font-size:0.75rem;color:var(--gray-500);margin-top:.4rem;display:none">
+          Dit sluit het huidige seizoen en opent het geselecteerde seizoen.
+        </div>
+      </div>
+
+      <div class="nieuw-seizoen">
+        <h3>Nieuw seizoen aanmaken</h3>
+        <input type="text" id="nieuw-naam" placeholder="Naam, bv. Seizoen 2027-2028">
+        <input type="text" id="nieuw-key" placeholder="Sleutel, bv. prestatieteam_2027_2028">
+        <button class="btn btn-primary" onclick="maakSeizoen()" style="width:100%">Seizoen aanmaken</button>
+      </div>
+    </div>
+
+    <div class="section-title">Inzendingen</div>
+    <div class="card">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-label">Totaal inzendingen</div><div class="stat-value" id="stat-totaal">—</div></div>
+        <div class="stat-card"><div class="stat-label">Coacht op zaterdag</div><div class="stat-value" id="stat-zat">—</div></div>
+        <div class="stat-card"><div class="stat-label">Draait zaalseizoen</div><div class="stat-value" id="stat-zaal">—</div></div>
+        <div class="stat-card"><div class="stat-label">Interesse opleiding</div><div class="stat-value" id="stat-opl">—</div></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:.75rem">
+        <button class="btn btn-secondary" onclick="exportCSV()">⬇ Exporteer Excel</button>
+      </div>
+      <div class="table-wrap" id="table-wrap">
+        <div class="empty-state">Selecteer een seizoen om inzendingen te bekijken.</div>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- BEWERK MODAL -->
+  <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this) sluitModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Inzending bewerken</h3>
+        <button class="modal-close" onclick="sluitModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-section">Persoonsgegevens</div>
+        <div class="form-row"><label>Naam</label><input type="text" id="m-naam"></div>
+        <div class="form-row"><label>E-mailadres</label><input type="email" id="m-email"></div>
+        <div class="form-row"><label>Adres</label><input type="text" id="m-adres"></div>
+        <div class="form-row"><label>Telefoonnummer</label><input type="text" id="m-telefoon"></div>
+        <div class="form-row"><label>Teams</label><input type="text" id="m-teams"></div>
+        <div class="form-section">Training</div>
+        <div class="form-row">
+          <label>Frequentie per week</label>
+          <select id="m-freq">
+            <option value="1">1 keer per week</option>
+            <option value="2">2 keer per week</option>
+            <option value="3+">3 of meer per week</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Voorkeursdagen</label>
+          <div class="check-grid">
+            <label><input type="checkbox" id="m-vk-ma"> Ma</label>
+            <label><input type="checkbox" id="m-vk-di"> Di</label>
+            <label><input type="checkbox" id="m-vk-wo"> Wo</label>
+            <label><input type="checkbox" id="m-vk-do"> Do</label>
+            <label><input type="checkbox" id="m-vk-vr"> Vr</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Kan om 17:00 uur trainen</label>
+          <div class="check-grid">
+            <label><input type="checkbox" id="m-vroeg-ma"> Ma</label>
+            <label><input type="checkbox" id="m-vroeg-di"> Di</label>
+            <label><input type="checkbox" id="m-vroeg-wo"> Wo</label>
+            <label><input type="checkbox" id="m-vroeg-do"> Do</label>
+            <label><input type="checkbox" id="m-vroeg-vr"> Vr</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Coach op zaterdag</label>
+          <div class="radio-yn">
+            <label><input type="radio" name="m-zat" value="ja"> Ja</label>
+            <label><input type="radio" name="m-zat" value="nee"> Nee</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Draait zaalseizoen</label>
+          <div class="radio-yn">
+            <label><input type="radio" name="m-zaal" value="ja"> Ja</label>
+            <label><input type="radio" name="m-zaal" value="nee"> Nee</label>
+          </div>
+        </div>
+        <div class="form-row"><label>Jaren ervaring</label><input type="number" id="m-erv" min="0" max="60" style="width:100px"></div>
+        <div class="form-section">Diploma's &amp; Opleiding</div>
+        <div class="form-row">
+          <label>Beschikt over diploma</label>
+          <div class="ht-grid">
+            <div></div><div class="ht-header">Ja</div><div class="ht-header">Nee</div>
+            <span>HT1</span><label style="justify-content:center"><input type="radio" name="m-dip-ht1" value="ja"></label><label style="justify-content:center"><input type="radio" name="m-dip-ht1" value="nee"></label>
+            <span>HT2</span><label style="justify-content:center"><input type="radio" name="m-dip-ht2" value="ja"></label><label style="justify-content:center"><input type="radio" name="m-dip-ht2" value="nee"></label>
+            <span>HT3</span><label style="justify-content:center"><input type="radio" name="m-dip-ht3" value="ja"></label><label style="justify-content:center"><input type="radio" name="m-dip-ht3" value="nee"></label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Wil opleiding volgen</label>
+          <div class="ht-grid">
+            <div></div><div class="ht-header">Ja</div><div class="ht-header">Nee</div>
+            <span>HT1</span><label style="justify-content:center"><input type="radio" name="m-opl-ht1" value="ja"></label><label style="justify-content:center"><input type="radio" name="m-opl-ht1" value="nee"></label>
+            <span>HT2</span><label style="justify-content:center"><input type="radio" name="m-opl-ht2" value="ja"></label><label style="justify-content:center"><input type="radio" name="m-opl-ht2" value="nee"></label>
+            <span>HT3</span><label style="justify-content:center"><input type="radio" name="m-opl-ht3" value="ja"></label><label style="justify-content:center"><input type="radio" name="m-opl-ht3" value="nee"></label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="verwijderInzending()">Verwijderen</button>
+        <button class="btn btn-secondary" onclick="sluitModal()">Annuleren</button>
+        <button class="btn btn-primary" onclick="slaOpInzending()">Opslaan</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://kgziynyxcktoiqedquwl.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtneml5bnl4Y2t0b2lxZWRxdXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MDI0NDgsImV4cCI6MjA5NzA3ODQ0OH0.nIbuFOjNsAcCRY0wvb5EoD4MfN8ga221YXuomrZOj9E';
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    let allInzendingen = [];
+    let huidigSeizoenKey = null;
+    let huidigRol = null;
+    let huidigEditId = null;
+
+    // AUTH CHECK
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; }
+    const { data: ikzelf } = await sb.from('gebruikers').select('*').eq('email', session.user.email).single();
+    if (!ikzelf) { await sb.auth.signOut(); window.location.href = 'index.html'; }
+
+    huidigRol = ikzelf.rol;
+    document.getElementById('header-user').textContent = `${ikzelf.naam} – ${ikzelf.rol.replace(/_/g,' ')}`;
+
+    // Readonly voor bestuurslid en lijncoordinator
+    const readonly = huidigRol === 'bestuurslid' || huidigRol === 'lijncoordinator';
+    if (readonly) {
+      document.querySelectorAll('.btn-primary, .btn-danger, .nieuw-seizoen').forEach(el => el.style.display = 'none');
+      document.getElementById('formulier-toggle').disabled = true;
+      document.getElementById('formulier-toggle').style.opacity = '.4';
+    }
+
+    window.doLogout = async () => { await sb.auth.signOut(); window.location.href = 'index.html'; };
+
+    // SEIZOENEN LADEN
+    async function laadSeizoenen() {
+      const { data } = await sb.from('seizoenen').select('*').order('aangemaakt_op', { ascending: false });
+      const sel = document.getElementById('seizoen-select');
+      sel.innerHTML = '<option value="">— selecteer seizoen —</option>';
+      (data || []).forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.key; opt.textContent = s.naam + (s.actief ? ' ✓' : '');
+        sel.appendChild(opt);
+      });
+      // Laad actief seizoen
+      const actief = (data || []).find(s => s.actief);
+      if (actief) {
+        document.getElementById('actief-naam').textContent = actief.naam;
+        document.getElementById('formulier-toggle').checked = actief.formulier_open;
+        document.getElementById('toggle-label').textContent = actief.formulier_open ? 'Formulier open' : 'Formulier gesloten';
+        huidigSeizoenKey = actief.key;
+        sel.value = actief.key;
+        await loadInzendingen();
+      }
+    }
+
+    window.toggleFormulier = async function(open) {
+      if (readonly) { await laadSeizoenen(); return; }
+      document.getElementById('toggle-label').textContent = open ? 'Formulier open' : 'Formulier gesloten';
+      await sb.from('seizoenen').update({ formulier_open: open }).eq('actief', true);
+      showToast(open ? 'Formulier is nu open' : 'Formulier is nu gesloten');
+    };
+
+    window.seizoenGekozen = async function(key) {
+      if (!key) { document.getElementById('activeer-btn').style.display = 'none'; document.getElementById('activeer-hint').style.display = 'none'; return; }
+      huidigSeizoenKey = key;
+      if (readonly) { await loadInzendingen(); return; }
+      const { data } = await sb.from('seizoenen').select('actief').eq('key', key).single();
+      const isActief = data?.actief;
+      document.getElementById('activeer-btn').style.display = isActief ? 'none' : 'flex';
+      document.getElementById('activeer-hint').style.display = isActief ? 'none' : 'block';
+      await loadInzendingen();
+    };
+
+    window.activeerSeizoen = async function() {
+      if (readonly) return;
+      const key = document.getElementById('seizoen-select').value;
+      if (!key) return;
+      const sel = document.getElementById('seizoen-select');
+      const naam = sel.options[sel.selectedIndex].text.replace(' ✓','');
+      if (!confirm(`Weet je zeker dat je "${naam}" wilt activeren?\n\nHet huidige seizoen wordt gesloten.`)) return;
+      // Deactiveer alle seizoenen, activeer gekozen
+      await sb.from('seizoenen').update({ actief: false, formulier_open: false }).neq('key', '');
+      await sb.from('seizoenen').update({ actief: true, formulier_open: true }).eq('key', key);
+      document.getElementById('actief-naam').textContent = naam;
+      document.getElementById('formulier-toggle').checked = true;
+      document.getElementById('toggle-label').textContent = 'Formulier open';
+      document.getElementById('activeer-btn').style.display = 'none';
+      document.getElementById('activeer-hint').style.display = 'none';
+      await laadSeizoenen();
+      showToast(`Seizoen "${naam}" is nu actief en open`);
+    };
+
+    window.maakSeizoen = async function() {
+      if (readonly) return;
+      const naam = document.getElementById('nieuw-naam').value.trim();
+      const key = document.getElementById('nieuw-key').value.trim();
+      if (!naam || !key) { alert('Vul zowel naam als sleutel in.'); return; }
+      if (!/^[a-zA-Z0-9_]+$/.test(key)) { alert('Sleutel mag alleen letters, cijfers en underscores bevatten.'); return; }
+      const { error } = await sb.from('seizoenen').insert({ naam, key, actief: false, formulier_open: false });
+      if (error) { alert(error.code === '23505' ? 'Deze sleutel bestaat al.' : error.message); return; }
+      document.getElementById('nieuw-naam').value = '';
+      document.getElementById('nieuw-key').value = '';
+      await laadSeizoenen();
+      showToast(`Seizoen "${naam}" aangemaakt`);
+    };
+
+    window.loadInzendingen = async function() {
+      if (!huidigSeizoenKey) return;
+      const { data, error } = await sb.from('inzendingen').select('*').eq('seizoen_key', huidigSeizoenKey).order('ingediend_op');
+      if (error) { console.error(error); return; }
+      allInzendingen = data || [];
+      renderTabel(allInzendingen);
+      renderStats(allInzendingen);
+    };
+
+    function renderStats(data) {
+      document.getElementById('stat-totaal').textContent = data.length;
+      document.getElementById('stat-zat').textContent = data.filter(r => r.coach_zaterdag === 'ja').length;
+      document.getElementById('stat-zaal').textContent = data.filter(r => r.zaalseizoen === 'ja').length;
+      document.getElementById('stat-opl').textContent = data.filter(r => r.opleiding_ht1 === 'ja' || r.opleiding_ht2 === 'ja' || r.opleiding_ht3 === 'ja').length;
+    }
+
+    function renderTabel(data) {
+      const wrap = document.getElementById('table-wrap');
+      if (!data.length) { wrap.innerHTML = '<div class="empty-state">Geen inzendingen gevonden voor dit seizoen.</div>'; return; }
+
+      const dagen = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag'];
+      const dagKort = ['Ma','Di','Wo','Do','Vr'];
+      const vroegVelden = ['vroeg_ma','vroeg_di','vroeg_wo','vroeg_do','vroeg_vr'];
+
+      const rows = data.map(r => {
+        const voorkeurCellen = dagen.map((dag, i) => {
+          const ok = (r.voorkeursdagen||[]).includes(dag);
+          return `<td style="text-align:center">${ok ? `<span class="tag tag-ja">${dagKort[i]}</span>` : '<span style="color:var(--gray-300)">—</span>'}</td>`;
+        }).join('');
+        const vroegCellen = vroegVelden.map((v, i) =>
+          `<td style="text-align:center">${r[v]==='ja' ? `<span class="tag tag-ja">${dagKort[i]}</span>` : '<span style="color:var(--gray-300)">—</span>'}</td>`
+        ).join('');
+        const dipCellen = ['diploma_ht1','diploma_ht2','diploma_ht3'].map(v =>
+          `<td style="text-align:center">${r[v]==='ja' ? '<span class="tag tag-ja">✓</span>' : '<span style="color:var(--gray-300)">—</span>'}</td>`
+        ).join('');
+        const oplCellen = ['opleiding_ht1','opleiding_ht2','opleiding_ht3'].map(v =>
+          `<td style="text-align:center">${r[v]==='ja' ? '<span class="tag tag-ja">✓</span>' : '<span style="color:var(--gray-300)">—</span>'}</td>`
+        ).join('');
+
+        return `<tr class="clickable" onclick="openModal('${r.id}')">
+          <td><strong>${r.naam||'—'}</strong><br><span style="color:var(--gray-500);font-size:.75rem">${r.email||''}</span></td>
+          <td>${r.teams||'—'}</td>
+          <td style="text-align:center">${r.training_frequentie ? r.training_frequentie+'×' : '—'}</td>
+          ${voorkeurCellen}${vroegCellen}
+          <td style="text-align:center"><span class="tag ${r.coach_zaterdag==='ja'?'tag-ja':'tag-nee'}">${r.coach_zaterdag||'—'}</span></td>
+          <td style="text-align:center"><span class="tag ${r.zaalseizoen==='ja'?'tag-ja':'tag-nee'}">${r.zaalseizoen||'—'}</span></td>
+          <td style="text-align:center">${r.ervaring_jaren||'—'}</td>
+          ${dipCellen}${oplCellen}
+        </tr>`;
+      }).join('');
+
+      wrap.innerHTML = `<table>
+        <thead>
+          <tr>
+            <th rowspan="2">Naam</th><th rowspan="2">Teams</th><th rowspan="2" style="text-align:center">Freq.</th>
+            <th colspan="5" style="text-align:center">Voorkeursdagen</th>
+            <th colspan="5" style="text-align:center">Vroeg (17u)</th>
+            <th rowspan="2" style="text-align:center">Zat.</th><th rowspan="2" style="text-align:center">Zaal</th><th rowspan="2" style="text-align:center">Erv.</th>
+            <th colspan="3" style="text-align:center">Diploma</th>
+            <th colspan="3" style="text-align:center">Opleiding</th>
+          </tr>
+          <tr>
+            <th style="text-align:center">Ma</th><th style="text-align:center">Di</th><th style="text-align:center">Wo</th><th style="text-align:center">Do</th><th style="text-align:center">Vr</th>
+            <th style="text-align:center">Ma</th><th style="text-align:center">Di</th><th style="text-align:center">Wo</th><th style="text-align:center">Do</th><th style="text-align:center">Vr</th>
+            <th style="text-align:center">HT1</th><th style="text-align:center">HT2</th><th style="text-align:center">HT3</th>
+            <th style="text-align:center">HT1</th><th style="text-align:center">HT2</th><th style="text-align:center">HT3</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    }
+
+    window.exportCSV = async function() {
+      if (!allInzendingen.length) { alert('Geen inzendingen om te exporteren.'); return; }
+      const headers = ['Naam','Email','Adres','Telefoon','Teams','Frequentie','Voorkeursdagen','Vroeg Ma','Vroeg Di','Vroeg Wo','Vroeg Do','Vroeg Vr','Zaterdag','Zaalseizoen','Ervaring (jr)','Diploma HT1','Diploma HT2','Diploma HT3','Opleiding HT1','Opleiding HT2','Opleiding HT3','Datum'];
+      const rows = allInzendingen.map(r => [
+        r.naam||'', r.email||'', r.adres||'', r.telefoon||'', r.teams||'',
+        r.training_frequentie||'', (r.voorkeursdagen||[]).join('; '),
+        r.vroeg_ma||'', r.vroeg_di||'', r.vroeg_wo||'', r.vroeg_do||'', r.vroeg_vr||'',
+        r.coach_zaterdag||'', r.zaalseizoen||'', r.ervaring_jaren||'',
+        r.diploma_ht1||'', r.diploma_ht2||'', r.diploma_ht3||'',
+        r.opleiding_ht1||'', r.opleiding_ht2||'', r.opleiding_ht3||'',
+        r.ingediend_op ? new Date(r.ingediend_op).toLocaleDateString('nl-NL') : ''
+      ]);
+      const JSZip = (await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js')).default || window.JSZip;
+      const centeredCols = new Set([6,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]);
+      const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="0"/><fonts count="2"><font><name val="Calibri"/><family val="2"/><sz val="11"/></font><font><b val="1"/></font></fonts><fills count="3"><fill><patternFill/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE5E7EB"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" applyAlignment="1" applyFont="1" applyFill="1" xfId="0"><alignment horizontal="center" vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1" xfId="0"><alignment horizontal="left" vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1" xfId="0"><alignment horizontal="center" vertical="center"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0" hidden="0"/></cellStyles></styleSheet>`;
+      const colLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      const escXml = v => String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const colWidths = {0:28,1:28,2:20,3:14,4:24,5:12,6:32};
+      let colsXml = '';
+      for (let c = 0; c < headers.length; c++) colsXml += `<col width="${colWidths[c]||12}" customWidth="1" min="${c+1}" max="${c+1}"/>`;
+      const allRows = [headers, ...rows];
+      let rowsXml = '';
+      allRows.forEach((row, rIdx) => {
+        const rowNum = rIdx + 1;
+        const ht = rIdx === 0 ? ' ht="20" customHeight="1"' : '';
+        let cellsXml = '';
+        row.forEach((val, cIdx) => {
+          const s = rIdx === 0 ? 1 : centeredCols.has(cIdx+1) ? 3 : 2;
+          cellsXml += `<c r="${colLetters[cIdx]}${rowNum}" t="inlineStr" s="${s}"><is><t>${escXml(val)}</t></is></c>`;
+        });
+        rowsXml += `<row r="${rowNum}"${ht}>${cellsXml}</row>`;
+      });
+      const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr baseColWidth="8" defaultRowHeight="15"/><cols>${colsXml}</cols><sheetData>${rowsXml}</sheetData><autoFilter ref="A1:${colLetters[headers.length-1]}1"/></worksheet>`;
+      const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Inzendingen" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+      const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="/xl/worksheets/sheet1.xml" Id="rId1"/><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml" Id="rId2"/></Relationships>`;
+      const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/></Types>`;
+      const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
+      const zip = new JSZip();
+      zip.file('[Content_Types].xml', contentTypes);
+      zip.file('_rels/.rels', rootRels);
+      zip.file('xl/workbook.xml', workbookXml);
+      zip.file('xl/_rels/workbook.xml.rels', relsXml);
+      zip.file('xl/styles.xml', stylesXml);
+      zip.file('xl/worksheets/sheet1.xml', sheetXml);
+      const blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `inzendingen_${huidigSeizoenKey||'export'}.xlsx`; a.click();
+      URL.revokeObjectURL(url);
+      showToast('Excel geëxporteerd ✓');
+    };
+
+    window.openModal = function(id) {
+      if (readonly) return;
+      const r = allInzendingen.find(x => x.id === id);
+      if (!r) return;
+      huidigEditId = id;
+      document.getElementById('m-naam').value = r.naam||'';
+      document.getElementById('m-email').value = r.email||'';
+      document.getElementById('m-adres').value = r.adres||'';
+      document.getElementById('m-telefoon').value = r.telefoon||'';
+      document.getElementById('m-teams').value = r.teams||'';
+      document.getElementById('m-erv').value = r.ervaring_jaren||'';
+      document.getElementById('m-freq').value = r.training_frequentie||'1';
+      ['ma','di','wo','do','vr'].forEach(d => {
+        const dag = {ma:'Maandag',di:'Dinsdag',wo:'Woensdag',do:'Donderdag',vr:'Vrijdag'}[d];
+        document.getElementById(`m-vk-${d}`).checked = (r.voorkeursdagen||[]).includes(dag);
+        document.getElementById(`m-vroeg-${d}`).checked = r[`vroeg_${d}`] === 'ja';
+      });
+      ['ja','nee'].forEach(v => {
+        const zat = document.querySelector(`input[name="m-zat"][value="${v}"]`);
+        if (zat) zat.checked = (r.coach_zaterdag||'nee') === v;
+        const zaal = document.querySelector(`input[name="m-zaal"][value="${v}"]`);
+        if (zaal) zaal.checked = (r.zaalseizoen||'nee') === v;
+      });
+      ['ht1','ht2','ht3'].forEach(ht => {
+        const dip = document.querySelector(`input[name="m-dip-${ht}"][value="${r['diploma_'+ht]||'nee'}"]`);
+        if (dip) dip.checked = true;
+        const opl = document.querySelector(`input[name="m-opl-${ht}"][value="${r['opleiding_'+ht]||'nee'}"]`);
+        if (opl) opl.checked = true;
+      });
+      document.getElementById('modal-overlay').classList.add('open');
+    };
+
+    window.sluitModal = function() { document.getElementById('modal-overlay').classList.remove('open'); huidigEditId = null; };
+
+    window.slaOpInzending = async function() {
+      if (!huidigEditId || !huidigSeizoenKey) return;
+      const dagMap = {ma:'Maandag',di:'Dinsdag',wo:'Woensdag',do:'Donderdag',vr:'Vrijdag'};
+      const voorkeursdagen = ['ma','di','wo','do','vr'].filter(d => document.getElementById(`m-vk-${d}`).checked).map(d => dagMap[d]);
+      const updated = {
+        naam: document.getElementById('m-naam').value.trim(),
+        email: document.getElementById('m-email').value.trim(),
+        adres: document.getElementById('m-adres').value.trim(),
+        telefoon: document.getElementById('m-telefoon').value.trim(),
+        teams: document.getElementById('m-teams').value.trim(),
+        training_frequentie: document.getElementById('m-freq').value,
+        voorkeursdagen,
+        vroeg_ma: document.getElementById('m-vroeg-ma').checked ? 'ja' : 'nee',
+        vroeg_di: document.getElementById('m-vroeg-di').checked ? 'ja' : 'nee',
+        vroeg_wo: document.getElementById('m-vroeg-wo').checked ? 'ja' : 'nee',
+        vroeg_do: document.getElementById('m-vroeg-do').checked ? 'ja' : 'nee',
+        vroeg_vr: document.getElementById('m-vroeg-vr').checked ? 'ja' : 'nee',
+        coach_zaterdag: document.querySelector('input[name="m-zat"]:checked')?.value || 'nee',
+        zaalseizoen: document.querySelector('input[name="m-zaal"]:checked')?.value || 'nee',
+        ervaring_jaren: parseInt(document.getElementById('m-erv').value) || null,
+        diploma_ht1: document.querySelector('input[name="m-dip-ht1"]:checked')?.value || 'nee',
+        diploma_ht2: document.querySelector('input[name="m-dip-ht2"]:checked')?.value || 'nee',
+        diploma_ht3: document.querySelector('input[name="m-dip-ht3"]:checked')?.value || 'nee',
+        opleiding_ht1: document.querySelector('input[name="m-opl-ht1"]:checked')?.value || 'nee',
+        opleiding_ht2: document.querySelector('input[name="m-opl-ht2"]:checked')?.value || 'nee',
+        opleiding_ht3: document.querySelector('input[name="m-opl-ht3"]:checked')?.value || 'nee',
+        gewijzigd_op: new Date().toISOString()
+      };
+      const { error } = await sb.from('inzendingen').update(updated).eq('id', huidigEditId);
+      if (error) { alert('Fout bij opslaan: ' + error.message); return; }
+      sluitModal();
+      await loadInzendingen();
+      showToast('Inzending opgeslagen ✓');
+    };
+
+    window.verwijderInzending = async function() {
+      if (!huidigEditId) return;
+      const naam = allInzendingen.find(x => x.id === huidigEditId)?.naam || 'deze inzending';
+      if (!confirm(`Weet je zeker dat je de inzending van "${naam}" wilt verwijderen?`)) return;
+      const { error } = await sb.from('inzendingen').delete().eq('id', huidigEditId);
+      if (error) { alert('Fout: ' + error.message); return; }
+      sluitModal();
+      await loadInzendingen();
+      showToast('Inzending verwijderd');
+    };
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    laadSeizoenen();
+  </script>
+</body>
+</html>
