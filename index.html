@@ -124,7 +124,7 @@
         const { error } = await sb.auth.signInWithOtp({
           email,
           options: {
-            emailRedirectTo: window.location.origin + '/dashboard.html'
+            emailRedirectTo: window.location.href.replace('index.html', '').replace(/\/$/, '') + '/dashboard.html'
           }
         });
         if (error) throw error;
